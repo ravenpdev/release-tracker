@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 
 app = FastAPI(title="Release Tracker API")
@@ -19,17 +19,19 @@ mock_database: dict[int, ProjectRead] = {
 
 @app.get("/projects/{project_id}", response_model=ProjectRead)
 def get_project(project_id: int):
-    return mock_database.get(project_id)
+    project = mock_database.get(project_id)
+
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+        )
+
+    return project
 
 
 @app.get("/projects")
-def list_projects(name: str | None = None):
+def list_projects(slug: str | None = None):
     projects = list(mock_database.values())
-    if name is None:
+    if slug is None:
         return projects
-    return [p for p in projects if p.name == name]
-
-
-# @app.get("/projects")
-# def list_projects() -> list[dict]:
-#     return [{"id": 1, "name": "Example"}]
+    return [p for p in projects if p.slug == slug]

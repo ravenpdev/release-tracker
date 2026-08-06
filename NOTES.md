@@ -44,3 +44,69 @@ class ProjectRead(BaseModel):
 ```
 
 Each field is defined with its name followed by a colon and its type.
+
+#### What FastAPI module provides a client for testing API endpoints?
+
+The fastapi.testclient module provides the TestClient class for testing API endpoints
+
+#### What command ensures all project dependencies are installed and synchronized after switching to a new branch?
+
+The uv sync command ensures all dependencies specified in the project configuration are installed and synchronized
+
+#### What are the main advantages of using SQLModel over SQLAlchemy directly?
+
+SQLModel provides built-in Pydantic data validation while using SQLAlchemy under the hood, combining the best of both worlds. This prevents code duplication and eliminates the extra step of wiring in Pydantic validation separately.
+
+#### In SQLMOdel, why would the id field of a model be defined as int | None with a default of None?
+
+The id field can be None when a record has not been saved to the database yet. Once saved, the database will assign an id value, but before that point, the object exists without an id.
+
+```python
+from sqlmodel import SQLModel, Field
+
+class Book(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    title: str = Field(index=True)
+    author: str
+    pages: int | None = Field(default=None)
+```
+
+#### How do you convert a Python class into a SQLModel table that can be used to communicate with a database?
+
+Inherit from SQLModel and set the flag table=True in the class definition. This tells SQlModel that the class should be used to translate into a database table, not just for data validation.
+
+#### In SQLModel, what is the difference between using SQLModel's field versus Pydantic's field?
+
+When working with SQLModel classes that map to database tables, you should use SQLModel's field function rather than Pydantic's field function. SQLModel's field supports database specific configuration like setting contraints (e.g., unique = True) and column definitions that are needed for database operations, while still maintaining compatibility with Pydantic's validation features.
+
+#### What does setting unique=True on a database field accomplish in SQLModel?
+
+Setting unique=True creates a database constraint that ensures no two records can have the same value for that field. This prevents duplicates and can cause a conflict if an attempt is made to insert a duplicate value.
+
+#### Why would you create separate schema classes for create, read, and update operations in SQLModel?
+
+Different operations require different fields. For create operatios, the database generates values like ID and timestamps. For read operations, all fields including ID and timestamps are populated. For update operations, fields may be optional. This separation ensures each operation only includes the appropriate data.
+
+#### What is the purpose of using a default_factory with a utc_now function for a created_at field in SQLModel?
+
+The default_factory with utc_now automatically sets the current UTC timestamp when a new database row is created, without requiring manual input. This ensures consistent timezone handling and automatic timestamp creation.
+
+#### What is the purpose of Alembic in database management?
+
+Alembic is used for databse migrations. It creates revisions that tell you how to move the database forward (and sometimes backward), allowing you to have a snapshot of your database at each version. This lets you easily review and modify your database schema to match your Python models without manual work.
+
+#### What two key pieces of information does Alembic need to know to function properly?
+
+Alembic needs to know how to connect to the database and how to find the SQL model definitions.
+
+#### What is the purpose of the env.py file in an Alembic setup?
+
+env.py is the PYthon script that runs every time Alembic executes a command. It needs to know here the database URL is set in the config, import the SQLModel metadata, and ensure that SQLModel is imported (which is not done by default).
+
+#### What does the alembic revision --autogenerate command do?
+
+This command inspect the database schema, identifies what has changed, and automatically generates a migration revision file based on those changes.
+
+#### What does the alembic upgrade head command accomplish?
+
+This command takes any pending migration scripts and applies them to the database, updating the database schema to match the current state of the models.
