@@ -110,3 +110,23 @@ This command inspect the database schema, identifies what has changed, and autom
 #### What does the alembic upgrade head command accomplish?
 
 This command takes any pending migration scripts and applies them to the database, updating the database schema to match the current state of the models.
+
+#### What is dependency injection in FastAPI and how does it relate to database sessions?
+
+Dependency injection in FastAPI is a mechanism where the framework calls a function before an endpoint runs and passes the result into the endpoint. For database sessions, FastAPI uses the Depends function to inject a session directly into route handlers, ensuring that each endpoint has access to a database session when needed.
+
+#### How SALAlchemy/SQLModel handle the **get** method when a record is not found?
+
+SQLAlchemy and SQLMOdel's **get** method returns None when nothing is found, rather than raising an exception
+
+#### When using SQLModel's **one()** method for queries, what two exceptions can be raised?
+
+The **one()** method will raise an exception in two cases: 1) If no results are found matching the query, it will raise a 'no result found' exception, and 2) if more than one result is found, it will raise an exception indicating that multiple matches were found when only one was expected.
+
+#### How do you create a basic select statement in SQLModel to retrieve all projects ordered by name?
+
+Use **select(Project).order_by(Project.name)** to create a select statement that retrieves all projects ordered by their name. The select function is imported from SQLModel, and the statement can then be executed using **session.exec()**
+
+#### What is the purpose of the Annotated type hint when working with FastAPI dependencies?
+
+The **Annotated** type hint in FastAPI is used to make function signatures cleaner and more descriptive. It combines the type information with dependency injection metadata, allowing you to specify both the type (like Session) and how it should be obtained (using Depends) in a single, readable annotation.

@@ -1,27 +1,41 @@
-from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel
+from typing import Annotated
 
-app = FastAPI(title="Release Tracker API")
+from fastapi import Depends, FastAPI, HTTPException, Response, status
+from sqlalchemy.exc import NoResultFound
+from sqlmodel import Session, select
 
-
-class ProjectRead(BaseModel):
-    id: int
-    name: str
-    slug: str
+from release_tracker.database import get_session
+from release_tracker.models import Project, ProjectCreate, ProjectRead, ProjectUpdate
 
 
-mock_database: dict[int, ProjectRead] = {
-    1: ProjectRead(id=1, name="Frontend Redesign", slug="frontend-redesign"),
-    2: ProjectRead(id=2, name="API v2", slug="api-v2"),
-    3: ProjectRead(id=3, name="Database Migration", slug="database-migration"),
-}
+def slugify(value: str) -> str:
+    cleaned = "".join(c for c in value.lower() if c.isalnum() or c == " ")
+    return "-".join(cleaned.split()) or "project"
 
 
-@app.get("/projects/{project_id}", response_model=ProjectRead)
-def get_project(project_id: int):
-    project = mock_database.get(project_id)
+app = FastAPI(
+    title="Release Tracker API",
+    description="An API for tracking project milestones and tasks for devs.",
+)
 
-    if not project:
+SessionDep = Annotated[Session, Depends(get_session)]
+
+
+@app.get("/projects", response_model=list[ProjectRead])
+def list_projects(session: SessionDep):
+    statement = select(Project).order_by(Project.name)
+    projects = session.exec(statement).all()
+
+    return list(projects)
+
+
+@app.get("/projects/{slug}", response_model=ProjectRead)
+def get_project(session: SessionDep, slug: str):
+    statement = select(Project).where(Project.slug == slug)
+
+    try:
+        project = session.exec(statement).one()
+    except NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
@@ -29,9 +43,47 @@ def get_project(project_id: int):
     return project
 
 
-@app.get("/projects")
-def list_projects(slug: str | None = None):
-    projects = list(mock_database.values())
-    if slug is None:
-        return projects
-    return [p for p in projects if p.slug == slug]
+@app.post("/projects", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
+def create_project(
+    session: SessionDep,
+    payload: ProjectCreate,
+):
+    project = Project.model_validate(payload, update={"slug": slugify(payload.name)})
+    session.add(project)
+    session.commit()
+    session.refresh(project)
+    return project
+
+
+@app.patch("/projects/{project_id}", response_model=ProjectRead)
+def update_project(session: SessionDep, project_id: int, payload: ProjectUpdate):
+    project = session.get(Project, project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+
+    updated_fields = payload.model_dump(exclude_unset=True)
+    project.sqlmodel_update(updated_fields)
+
+    if "name" in updated_fields and updated_fields["name"] is not None:
+        project.slug = slugify(updated_fields["name"])
+
+    session.add(project)
+    session.commit()
+    session.refresh(project)
+    return project
+
+
+@app.get("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_project(session: SessionDep, project_id: int):
+    project = session.get(Project, project_id)
+
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+        )
+
+    session.delete(project)
+    session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
