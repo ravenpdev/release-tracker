@@ -130,3 +130,51 @@ Use **select(Project).order_by(Project.name)** to create a select statement that
 #### What is the purpose of the Annotated type hint when working with FastAPI dependencies?
 
 The **Annotated** type hint in FastAPI is used to make function signatures cleaner and more descriptive. It combines the type information with dependency injection metadata, allowing you to specify both the type (like Session) and how it should be obtained (using Depends) in a single, readable annotation.
+
+#### What is the purpose of calling session.refresh(project) after committing a new project to the database?
+
+To refresh the project from the session and ensure that generated values like the primary key ID are available on the model instance. Without refereshing, the ID would not be set on the object.
+
+#### What does the exlude_unset flag do when getting updated fields from a model in FastAPI?
+
+It excludes fields that haven't been changed, returning only the fields that have actually been updated rather than all fields including unchanged ones.
+
+#### What is the purpose of the depends function in FastAPI?
+
+The depends function tells the framework to run a specified function before executing an endpoint and provide its result to the endpoint. It's used for dependency injection.
+
+#### What is the primary purpose of using the Depends function in FastAPI?
+
+To tell the framework to run another function first and provide its result before executing the endpoint
+
+#### What happens when FastAPI resolves a dependency that uses a generator function iwth a yield statement?
+
+It executes code until the yield, pauses for the route handler, then resumes after
+
+#### How does SQLModel's context manager handle exceptions that occurs inside a **with** block?
+
+It automatically rolls back uncommitted transactions
+
+#### What type of error should be caught to handle duplicate project names or slugs in the database?
+
+IntegrityError
+
+#### What is the purpose of creating a dependencies.py file?
+
+To organize reusable dependencies instead of keeping them in main.py
+
+#### What HTTP status code should be returned when a request cannot be completed because it conflicts with existing data in the database?
+
+409 (Conflict) is the status code that indicates a request cannot be completed because it conflicts with something else in the database.
+
+#### Whcih SQLAlchemy exception is raised when a unique constraint is violated in the database?
+
+IntegrityError
+
+#### Why should HTTPException not be imported in the CRUD layer
+
+The data layer should focus on database exceptions, while the web layer handles HTTP responses.
+
+#### What is the purpose of APIRouter in FastAPI?
+
+APIRouter helps split a FastAPI application into different routes or paths as smaller focused modules, which can then be merged or referenced back in the main file. This prevents all endpoint from being in one file and makes the application easier to navigate as it grows.
