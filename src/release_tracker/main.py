@@ -1,13 +1,41 @@
+import logging
+import time
+
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
+from release_tracker.config import configure_logging, get_settings
 from release_tracker.routers import projects
+
+configure_logging(debug=get_settings().debug)
+logger = logging.getLogger(__name__)
+
 
 app = FastAPI(
     title="Release Tracker API",
     description="An API for tracking projects milestones and developer tasks.",
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.perf_counter()
+
+    response = await call_next(request)
+
+    process_time = (time.perf_counter() - start_time) * 1000
+
+    logger.info(
+        "%s %s completed in %.2fms with status code %s",
+        request.method,
+        request.url.path,
+        process_time,
+        response.status_code,
+    )
+
+    return response
+
 
 app.include_router(projects.router)
 

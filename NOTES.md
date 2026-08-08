@@ -178,3 +178,71 @@ The data layer should focus on database exceptions, while the web layer handles 
 #### What is the purpose of APIRouter in FastAPI?
 
 APIRouter helps split a FastAPI application into different routes or paths as smaller focused modules, which can then be merged or referenced back in the main file. This prevents all endpoint from being in one file and makes the application easier to navigate as it grows.
+
+#### Why is logging preffered over print statements in production code?
+
+Logging is preferred in production because print statements can expose client data, secrets, or other sensitive information in logs, Many production codebases include CI/CD checks to prevent print statements from being deployed. Logging provides better control over what information is captured and how it's formatted.
+
+#### What is the convention for naming a logger object in Python, and why is this convention used?
+
+The convention is to use the special name variable when creating a logger with logging.getLogger(name). This automatically sets the logger name to the module's path, creating a hierarchy that allows for different logging configurations to flow down to different modules.
+
+#### What are the five standard log level in Python's logging module, ordered from least to most server
+
+Debug (detailed diagnostic info), Info(general operational events), Warning(something unexpected but non-critical happened), Error(serious problem affecting operations), Critical(most severe, critical system errors)
+
+#### What is the purpose of using environment variables to control logging levels in Python applications?
+
+Environment variables allow different logging levels to be used in different environments. For example, debug messages can be shown when running locally by setting DEBUG=true, while production environments can use info level logging to avoid surfacing debug messages.
+
+#### What information is typically included in production log formats beyond just the log message?
+
+Production log formats typically include timestamps, the source module that generated the log, and the log level. This provides more context and makes logs more useful for debugging and monitoring.
+
+#### In Python logging configuration, what is the difference between setting the level to 'debug' versus 'info'?
+
+When the level is set to 'debug', all log messages including debug-level messages are displayed. When set to 'info', only info-level and higher priority messages (warning, error, critical) are shown, while debug messages are suppressed.
+
+#### What is the primary advantages of the loguru library over Python's standard library logger?
+
+Loguru wraps the standard library API in a more ergonomic interface, offering one simple import and sensible defaults. It has approximately 24,000 starts on GitHub and is recommended when the standard library logger becomes cumbersome to use.
+
+#### What type of log output does the structlog library product?
+
+Structlog produces structured JSON-style log records, which are easier to parse and analyze programmatically compared to plain text logs.
+
+#### What is middleware and what role does it play in a web application?
+
+Middleware is code that runs before and after every request that is processed by an application. It acts as a bridge between the client and the route handler, allowing you to intercept incoming request (for logging, authentication, modifying headers) before they reach route logic, and intercept outgoing responses before they're returned to the client.
+
+#### How do you define middleware in FastAPI using a decorator?
+
+Use the app.middleware decorator with the middleware type (e.g., "HTTP"), then define an async function that takes a request and call_next parameter. Inside the function, call response = await call_next(request) and return the response. Any code before this line runs pre-route, and any code after runs post-route.
+
+#### In what order are multiple middlewares executed when handling requests and response?
+
+For requests: middlewares are executed from last registered to first registered (if you register first_middleware then last_middleware, the execution is last_middleware -> first_middleware -> route). For responses: middlewares are executed from first registered to last registered (route -> first_middleware -> last_middleware).
+
+#### Why must middleware always be defined as async functions in FastAPI?
+
+Middleware must be async because FastAPI runs on an asyncio event loop, and call_next returns a coroutine that needs to be awaited to run the next middleware or route handler and build the response. Since await is only allowed inside async def functions, synchronous middleware cannot work as it has no way to await call_next and get the response back.
+
+#### What is the purpose of the call_next function in middleware?
+
+call_next is a function that passes the request down the chain to the next route handler or to the next middleware. When the route handler finishes, call_next returns the response object, allowing you to modify, change, or log it before it goes back to the user.
+
+#### What happens when SQLMOdel sees a string enum annotated on a column?
+
+SQLModel stores the value as a string and adds a database level constraint that will reject anything outside of the explicitly listed enum values.
+
+#### What is the purpose of using the index=True parameter on a project_id foreign key column?
+
+Setting index=True causes the database to build an index on that column, which makes lookups significantly faster. This is useful for columns that will be queried frequently, such as foreign key relationships.
+
+#### How does the SQLModel relationship function enable navigation between related objects?
+
+When both sides of a relationship are wired up correctly using the relationship function with back_populates, related objects can be navigated in Python code (like task.project and project.tasks) without writing any joined queries manually
+
+#### Why does the type annotation for tasks: list[Task] work even though the Task class is defined later in the file?
+
+In Python 3.7+, type annotations can be evaluated lazily (either through from **future** import annotations or as default behavior in later versions), which automatically provides forward references. This allows type annotations to reference classes defined later in the same file without requiring string literals or special handling.
