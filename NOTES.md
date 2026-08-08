@@ -246,3 +246,73 @@ When both sides of a relationship are wired up correctly using the relationship 
 #### Why does the type annotation for tasks: list[Task] work even though the Task class is defined later in the file?
 
 In Python 3.7+, type annotations can be evaluated lazily (either through from **future** import annotations or as default behavior in later versions), which automatically provides forward references. This allows type annotations to reference classes defined later in the same file without requiring string literals or special handling.
+
+#### What potential issue can arise when a response includes related data if eager loading is not properly implemented?
+
+N+1 queries can become an issue. This occurs when the database is queried multiple times unnecessarily - once for the main entity and then once for each related entity, rather than loading all the data efficiently in a minimal number of queries
+
+#### What are the three key SQLAlchemy query methods mentioned for building relational queries and filtering?
+
+The three key methods are: where (for filtering conditions), join(for combining related tables), and selecinload(for eager loading related data to avoid N+1 query problems).
+
+#### What is the purpose of creating a dependency like get_task_or_404 in a FastAPI application?
+
+The dependency loads a task by ID and automatically raises a 404 HTTP exception if the task doesn't exist. This eliminates the need for additional error checking in routes that require a task to be present, making the code cleaner and more reusable.
+
+#### What testing infrastructure components are mentioned for easing the testing process with database operations?
+
+In-memory SQLite, the static pool pattern, and a fixture chain that builds sample data for each test run. This eliminates the need to manually create test data in each individual test.
+
+#### What code smell is identified when the same code is copied and pasted wholesale?
+
+Copying and pasting code wholesale is a signal that there is an opportunity to refactor or generalize the code. Thsi typically indicates duplication that could be eliminated through better abstractions.
+
+#### How does selectinload solve the N+1 query problem in SQLAlchemy?
+
+selectinload tells SQLAlchemy to fetch all related records in one extra query eagerly ahead of time, resulting in only 2 queries total regardless of the number of rows returned. The first query loads the main records, and the secodn query does an internal lookup using IDs from the first result to combine them. This way, related data is already in memory when accessed.
+
+#### What is the difference between selectinload (or eager loading with a second query using WHERE ID IN) and joinedload in SQLAlchemy?
+
+selectinload (or eager loading with WHERE ID IN) runs a second query with a WHERE ID IN clause and is best for one-to-many or many-to-many relationships, keeping the first query more compact. joinedload uses a left outer join to pull related rows in the same query and might be better for 1-to-1 relationship or smaller one-to-many sets where row duplication does'nt matter as much.
+
+#### What are the two main advantages of using SQLite for testing instead of PostgreSQL?
+
+Speed is the primary advantage - an in-memory SQLite database can be created in seconds, while spinning up PostgreSQL for every test run takes much longer. Additionally, when configured properly, every test can get its own isolated database, preventing tests from interfering with each other.
+
+#### What are the limitations of using SQLite as a test database when the production database is PostgreSQL?
+
+SQLite doesn't enforce some PostgreSQL-specific behaviors, including issues with native enum types and some constraint checks that don't work the same way. This means even with 100% test coverage, there will be gaps that could hide subtle bugs related to PostgreSQL interaction, since the underlying infrastructuer doesn't exactly match
+
+#### What is the purpose of the SQLite path syntax with no file system path in the database configuration?
+
+An empty path creates an in-memory database rather than one stored on the file system. Each new engine starts with an empty schema, ensuring there's no leftover state between test runs and eliminating the need to cleanup after each test.
+
+#### What is StaticPool with check_same_thread=False necessary when configuring SQLite for testing with FastAPI?
+
+This configuration keeps the in-memory database alive across multiple connections with SQLAlchemy and the FastAPI test client. Without this pool override, the database could vanish between connections, causing tests to fail with cryptic errors.
+
+#### Waht is the purpose of the yield sytnax in a pytest fixture that provides a database session?
+
+The yield syntax ensures that the session block opens before the test runs and closes when the test finishes. This triggers a rollback on any uncommitted transactions and frees up the connection, providing proper cleanup after each test.
+
+#### What is the difference between authentication and authorization in API security?
+
+Authentication is ocnfirming that the person sending a request is who they claim to be - it's about veriying identity. Authorization is focused on permissions - once identity is established, it determines which actions that person is allowed to take.
+
+#### What are the two main approaches for API authentication in modern applications?
+
+Single sign-on and OAuth 2, which delegates authentication to a third party like Google, GitHub, or Okta; and first party email and password, where the application stores and verifies hashed passwords itself.
+
+#### What are the key tradeoffs between using a third-party authentication versus implementing first-party email and password authentication?
+
+Third-party authentication (SSO/OAuth2) delegates authentication to providers like Google, GitHub, or Okta, which handle password storage, resets, and account recovery, removing credential security burden from your application, However, it requires third-party setup, may involve vendor costs, and needs configuration of callback URLs and provider-specific settings.
+
+First-party email and password authentication is simpler to implement with no third-party setup, no vendor costs, and no callback URLs or provider-specific configuration. However, the tradeoff is that credential security becomes entirely your responsibility, and you must safely store hashed passwords yourself. In practice, rolling you own auth is often considered a poor choice, and managed identity providers are typically recommended for production environments.
+
+#### What is a JWT token and why is it used in API authentication?
+
+JWT (JSON Web Token) is a token that encodes information about the user and an expiration time. It is signed by the server and sent to the client after successful authentication. The client includes this token is subsequent requests, allowing the server to verify the signature and decode the user information to authorize protected requests.
+
+#### Describe the 5-step authentication flow for a password-based API authentication system.
+
+Regisration: user creates account with email and password, password is hashed before sorting in database. 2) Login: client POSTs email and plain text password to /auth/token. 3) Verification: server looks up user by email, hashes submitted password, and compares against stored hash. 4) Token generation: if match, server signs a JWT encoding user info and expiration, then sends it back. 5) Protected requests: client includes JWT in header, server verifies signature and decodes user ID to authorize the request.

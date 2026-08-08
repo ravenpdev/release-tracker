@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 from release_tracker.config import configure_logging, get_settings
-from release_tracker.routers import projects
+from release_tracker.routers import projects, tasks
 
 configure_logging(debug=get_settings().debug)
 logger = logging.getLogger(__name__)
@@ -38,6 +38,7 @@ async def log_requests(request: Request, call_next):
 
 
 app.include_router(projects.router)
+app.include_router(tasks.router)
 
 
 @app.exception_handler(IntegrityError)

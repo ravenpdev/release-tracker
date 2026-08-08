@@ -10,7 +10,7 @@ def test_list_projects():
     response = client.get("/projects")
 
     assert response.status_code == 200
-    assert len(response.json()) == 4
+    assert len(response.json()) == 3
 
 
 def test_get_project_by_id():

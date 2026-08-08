@@ -33,4 +33,5 @@ def update_project(
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_project(session: SessionDep, project: ProjectDep) -> Response:
-    return crud.delete_project(session, project)
+    crud.delete_project(session, project)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
