@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Any
 
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -23,7 +24,9 @@ app.include_router(auth.router)
 
 
 @app.exception_handler(IntegrityError)
-def handle_integrity_error(request: Request, exc: IntegrityError):
+def handle_integrity_error(
+    request: Request, exc: IntegrityError
+) -> JSONResponse:
     logger.warning(
         "IntegrityError handled method=%s path=%s",
         request.method,
@@ -36,7 +39,7 @@ def handle_integrity_error(request: Request, exc: IntegrityError):
 
 
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def log_requests(request: Request, call_next: Any) -> Any:
     start_time = time.perf_counter()
     response = await call_next(request)
     process_time = (time.perf_counter() - start_time) * 1000
