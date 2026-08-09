@@ -3,7 +3,12 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Query, Response, status
 
 from release_tracker import crud
-from release_tracker.dependencies import ProjectDep, SessionDep, TaskDep
+from release_tracker.dependencies import (
+    CurrentUserDep,
+    ProjectDep,
+    SessionDep,
+    TaskDep,
+)
 from release_tracker.models import (
     TaskCreate,
     TaskPriority,
@@ -21,7 +26,9 @@ def list_tasks(
     project_id: int | None = None,
     project_slug: str | None = None,
     task_status: Annotated[TaskStatus | None, Query(alias="status")] = None,
-    task_priority: Annotated[TaskPriority | None, Query(alias="priority")] = None,
+    task_priority: Annotated[
+        TaskPriority | None, Query(alias="priority")
+    ] = None,
     overdue_only: bool = False,
 ) -> Any:
     return crud.list_tasks(
@@ -44,16 +51,28 @@ def get_task(task: TaskDep) -> Any:
     response_model=TaskRead,
     status_code=status.HTTP_201_CREATED,
 )
-def create_task(session: SessionDep, project: ProjectDep, payload: TaskCreate) -> Any:
+def create_task(
+    session: SessionDep,
+    current_user: CurrentUserDep,
+    project: ProjectDep,
+    payload: TaskCreate,
+) -> Any:
     return crud.create_task(session, project.id, payload)
 
 
 @router.patch("/tasks/{task_id}", response_model=TaskRead)
-def update_task(session: SessionDep, task: TaskDep, payload: TaskUpdate) -> Any:
+def update_task(
+    session: SessionDep,
+    task: TaskDep,
+    payload: TaskUpdate,
+    current_user: CurrentUserDep,
+) -> Any:
     return crud.update_task(session, task, payload)
 
 
 @router.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(session: SessionDep, task: TaskDep) -> Response:
+def delete_task(
+    session: SessionDep, task: TaskDep, current_user: CurrentUserDep
+) -> Response:
     crud.delete_task(session, task)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 
 
-def test_create_project(client: TestClient):
-    response = client.post(
+def test_create_project(auth_client: TestClient):
+    response = auth_client.post(
         "/projects/",
         json={
             "name": "New Project",
@@ -32,8 +32,8 @@ def test_list_projects(client: TestClient, sample_project_id: int):
     assert data[0]["id"] == sample_project_id
 
 
-def test_update_project(client: TestClient, sample_project_id: int):
-    response = client.patch(
+def test_update_project(auth_client: TestClient, sample_project_id: int):
+    response = auth_client.patch(
         f"/projects/{sample_project_id}",
         json={"name": "Updated Platform Name"},
     )
@@ -43,16 +43,18 @@ def test_update_project(client: TestClient, sample_project_id: int):
     assert data["slug"] == "updated-platform-name"
 
 
-def test_delete_project(client: TestClient, sample_project_id: int):
-    response = client.delete(f"/projects/{sample_project_id}")
+def test_delete_project(auth_client: TestClient, sample_project_id: int):
+    response = auth_client.delete(f"/projects/{sample_project_id}")
     assert response.status_code == 204
 
-    response = client.get(f"/projects/{sample_project_id}")
+    response = auth_client.get(f"/projects/{sample_project_id}")
     assert response.status_code == 404
 
 
-def test_create_duplicate_project_fails(client: TestClient, sample_project_id: int):
-    response = client.post(
+def test_create_duplicate_project_fails(
+    auth_client: TestClient, sample_project_id: int
+):
+    response = auth_client.post(
         "/projects/",
         json={
             "name": "Release Platform",  # Same name as sample_project_id
@@ -63,3 +65,13 @@ def test_create_duplicate_project_fails(client: TestClient, sample_project_id: i
     assert response.json() == {
         "detail": "Data conflict occurred (e.g., duplicate entry)."
     }
+
+
+def test_create_project_unauthenticated(client: TestClient):
+    # No `auth_client` in this test: the bare `client` has no token, so
+    # the request is rejected before the route handler runs.
+    response = client.post(
+        "/projects/",
+        json={"name": "Sneaky Project", "description": "no auth here"},
+    )
+    assert response.status_code == 401

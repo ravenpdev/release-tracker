@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 
+from pydantic import EmailStr
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
@@ -12,7 +13,9 @@ from release_tracker.models import (
     TaskPriority,
     TaskStatus,
     TaskUpdate,
+    User,
 )
+from release_tracker.security import get_password_hash
 
 
 def slugify(value: str) -> str:
@@ -30,7 +33,9 @@ def get_project(session: Session, project_id: int) -> Project | None:
 
 
 def create_project(session: Session, payload: ProjectCreate) -> Project:
-    project = Project.model_validate(payload, update={"slug": slugify(payload.name)})
+    project = Project.model_validate(
+        payload, update={"slug": slugify(payload.name)}
+    )
     session.add(project)
     session.commit()
     session.refresh(project)
@@ -99,7 +104,9 @@ def get_task(session: Session, task_id: int) -> Task | None:
     return session.exec(statement).first()
 
 
-def create_task(session: Session, project_id: int | None, payload: TaskCreate) -> Task:
+def create_task(
+    session: Session, project_id: int | None, payload: TaskCreate
+) -> Task:
     task = Task.model_validate(payload, update={"project_id": project_id})
     session.add(task)
     session.commit()
@@ -120,3 +127,25 @@ def update_task(session: Session, task: Task, payload: TaskUpdate) -> Task:
 def delete_task(session: Session, task: Task) -> None:
     session.delete(task)
     session.commit()
+
+
+# Auth
+
+
+def get_user_by_email(session: Session, email: EmailStr) -> User | None:
+    statement = select(User).where(User.email == email)
+    return session.exec(statement).first()
+
+
+def create_user(
+    session: Session, *, email: str, password: str, is_active: bool = True
+) -> User:
+    user = User(
+        email=email.lower(),
+        hashed_password=get_password_hash(password),
+        is_active=is_active,
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user

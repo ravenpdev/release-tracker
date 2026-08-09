@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Response, status
 
 from release_tracker import crud
-from release_tracker.dependencies import ProjectDep, SessionDep
+from release_tracker.dependencies import CurrentUserDep, ProjectDep, SessionDep
 from release_tracker.models import ProjectCreate, ProjectRead, ProjectUpdate
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -19,19 +19,28 @@ def get_project(project: ProjectDep) -> Any:
     return project
 
 
-@router.post("/", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
-def create_project(session: SessionDep, payload: ProjectCreate) -> Any:
+@router.post(
+    "/", response_model=ProjectRead, status_code=status.HTTP_201_CREATED
+)
+def create_project(
+    session: SessionDep, payload: ProjectCreate, current_user: CurrentUserDep
+) -> Any:
     return crud.create_project(session, payload)
 
 
 @router.patch("/{project_id}", response_model=ProjectRead)
 def update_project(
-    session: SessionDep, project: ProjectDep, payload: ProjectUpdate
+    session: SessionDep,
+    project: ProjectDep,
+    payload: ProjectUpdate,
+    current_user: CurrentUserDep,
 ) -> Any:
     return crud.update_project(session, project, payload)
 
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_project(session: SessionDep, project: ProjectDep) -> Response:
+def delete_project(
+    session: SessionDep, project: ProjectDep, current_user: CurrentUserDep
+) -> Response:
     crud.delete_project(session, project)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

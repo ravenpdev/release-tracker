@@ -316,3 +316,49 @@ JWT (JSON Web Token) is a token that encodes information about the user and an e
 #### Describe the 5-step authentication flow for a password-based API authentication system.
 
 Regisration: user creates account with email and password, password is hashed before sorting in database. 2) Login: client POSTs email and plain text password to /auth/token. 3) Verification: server looks up user by email, hashes submitted password, and compares against stored hash. 4) Token generation: if match, server signs a JWT encoding user info and expiration, then sends it back. 5) Protected requests: client includes JWT in header, server verifies signature and decodes user ID to authorize the request.
+
+#### Why should plain text passwords never be stored in a database?
+
+Plain text passwords should never be stored because databases can be compromised through SQL injection, leaked backups, misconfigured cloud buckets, or other security breaches. Since many users reuse passwords across multiple sites, a leak can elad to account takeovers on other platforms.
+
+#### What is the key characteristic of a cryptographic hashing function?
+
+A cryptographic hashing function takes an input of any size and returns a fixed-sized string. It is one-way and cheap to compute, meaning it's easy to hash a password but computationally infeasible to reverse the hash back to the original password.
+
+#### How does password salting affect the deterministic nature of hashing?
+
+When a salt is used, the same password hashed twice will not necessarily produce the same output because a unique salt is typically generated for each operation. However, the system can still verify the password because modern hashing alrogrithms embed the salt whithin the hash output itself. During verification, the algorithm uses the embedded salt from the stored hash to hash the input password the same way, then compares the results to determine if the password is correct.
+
+#### What is ARgon2id and hwy is it recommended for password hashing?
+
+Argon2id is a password hashing algorithm that won the Password Hashing Competition in 2015. It is currently recommended for new applications and is the algorithm recommended by FastAPI. It is deliberately slow and memory-intensive to make brute force attacks less effective.
+
+#### What is the purpose of the get_password_hash() function in password security implementation?
+
+The get_password_hash() function creates a hash from a plain text password that will be stored in the database. It uses the password hashing algorithm (such as Argon2id) to generate a secure hash that represents the password without storing the actual password.
+
+```python
+uv run python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+#### What are the three characteristics that an authentication token msut have?
+
+The token msut be: 1) cheap to verify, 2) hard to forge, and 3) self-contained.
+
+#### What are the three steps required when verifying a JWT token?
+
+Decode the token with the signing key, 2) Pull the sub (subject claim) out of the payload, and 3) Look up that user in the database. If any of these steps fail, a 401 unauthorized error should be returned.
+
+#### What does the OAuth2PasswordBearer utility from FastAPI automatically do when added to a route?
+
+It tells FastAPI to expect a token in a specific format in the header. FastAPI will automatically pull the token out of the header on protected routes, reject requests without a token with a 401 status, and add an 'Authorize' button to the interactive docs UI that handles token generation and storage for subsequent requests.
+
+#### What are the two specific exceptions that should be caught when decoding a JWT token?
+
+nvalidTokenError from jwt.exceptions and ValueError. InvalidTokenError handles JWT-specific validation failures, while ValueError catches issue with types or other validation problems.
+
+#### When validating an authenticated user, what two conditions should cause a credentials exception to be raised after successfully retrieving the user from the database?
+
+A credential exception should be raised if the user is None (doesn't exist) or if the user is not active.
+
+Using the same generic credentials exception for all failure points prevent exposing specific reason why authentication failed. This improves security by not revealing whether the token was malformed, expired, the user doesn't exists, or other specific details that could be useful to attackers.

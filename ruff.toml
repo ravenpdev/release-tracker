@@ -1,0 +1,5 @@
+line-length = 80
+extend-exclude = ["alembic/versions", "_exercise"]
+
+[lint]
+select = ["E", "F", "I"]

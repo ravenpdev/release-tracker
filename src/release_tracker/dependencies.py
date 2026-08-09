@@ -5,9 +5,12 @@ from sqlmodel import Session
 
 from release_tracker import crud
 from release_tracker.database import get_session
-from release_tracker.models import Project, Task
+from release_tracker.models import Project, Task, User
+from release_tracker.security import get_current_user
 
 SessionDep = Annotated[Session, Depends(get_session)]
+
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 def get_project_or_404(session: SessionDep, project_id: int) -> Project:

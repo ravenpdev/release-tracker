@@ -1,8 +1,9 @@
 from datetime import UTC, date, datetime
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import StringConstraints
+from pydantic.networks import EmailStr
 from sqlalchemy import Column, DateTime
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -11,7 +12,9 @@ def utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-ProjectName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2)]
+ProjectName = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=2)
+]
 
 
 class ProjectBase(SQLModel):
@@ -48,7 +51,11 @@ class ProjectRead(ProjectBase):
     created_at: datetime
 
 
-TaskTitle = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2)]
+# --- Task ---
+
+TaskTitle = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=2)
+]
 
 
 class TaskStatus(StrEnum):
@@ -106,3 +113,34 @@ class TaskRead(TaskBase):
     project_id: int
     project_name: str
     project_slug: str
+
+
+# --- User ---
+
+
+class UserBase(SQLModel):
+    email: EmailStr = Field(unique=True)
+    is_active: bool = True
+
+
+class User(UserBase, table=True):
+    __tablename__ = "users"  # pyright: ignore[reportAssignmentType]
+    id: int | None = Field(default=None, primary_key=True)
+    hashed_password: str
+
+
+class UserCreate(SQLModel):
+    email: EmailStr
+    password: str
+
+
+class UserRead(UserBase):
+    id: int
+
+
+# --- Auth ---
+
+
+class AccessToken(SQLModel):
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
