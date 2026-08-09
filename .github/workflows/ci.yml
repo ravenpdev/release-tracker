@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: release_tracker
+          POSTGRES_USER: release_tracker
+          POSTGRES_PASSWORD: release_tracker
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U release_tracker -d release_tracker"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+psycopg://release_tracker:release_tracker@localhost:5432/release_tracker
+      JWT_SECRET_KEY: ci-secret-key-32-bytes-or-longer-1234
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.11.6"
+
+      - name: Set up Python
+        run: uv python install 3.14
+
+      - name: Sync dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: uv run ruff check --no-cache .
+
+      - name: Format check
+        run: uv run ruff format --check .
+
+      - name: Type check
+        run: uv run mypy .
+
+      - name: Apply migrations
+        run: uv run alembic upgrade head
+
+      - name: Test with coverage
+        run: |
+          uv run coverage run -m pytest
+          uv run coverage report

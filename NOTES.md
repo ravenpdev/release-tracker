@@ -65,7 +65,10 @@ The id field can be None when a record has not been saved to the database yet. O
 from sqlmodel import SQLModel, Field
 
 class Book(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(
+        default=None,
+        primary_key=True,
+    )
     title: str = Field(index=True)
     author: str
     pages: int | None = Field(default=None)
@@ -362,3 +365,39 @@ nvalidTokenError from jwt.exceptions and ValueError. InvalidTokenError handles J
 A credential exception should be raised if the user is None (doesn't exist) or if the user is not active.
 
 Using the same generic credentials exception for all failure points prevent exposing specific reason why authentication failed. This improves security by not revealing whether the token was malformed, expired, the user doesn't exists, or other specific details that could be useful to attackers.
+
+#### What are the four key quality check tools that should be run as part of a deployment process for a FastAPI application?
+
+Ruff (for linting and formatting), MyPy (for static type checking), pytest (for tests), and coverage (for test coverage reporting)
+
+#### What is the difference between running ruff check and ruff check --fix in a Python project?
+
+ruff check --fix performs automatic fixes for safe issues like reorganizing imports and removing unused imports. This flag should typically be run locally but not in CI, as it could change the committed code. The plain ruff check command only reports issues without modifying code.
+
+#### What does the branch = true configuration option do in coverage reporting?
+
+It tracks both line and branch coverage. This mean that if a function has an if statement that is always taken on the truthy side, the falsy side will count as missed coverage, providing more thorough coverage analysis.
+
+#### Why is reproducibility important when specifying checks in deployment process?
+
+Reproducibility ensures that any contributors can run the same commands fairly easily, regardless of their development environment. It eliminates dependencies on specific IDEs, lcoally installed tools, or individual configurations, making the development process consisten across all team members.
+
+#### What command generates an HTML report for test coverage that can be viewed in a browser?
+
+uv run coverage html generates an HTML report that provides and interactive, visual representation of test coverage, including which lines were covered and which were missed.
+
+#### What is the advantage of using the Python 3.14-slim Docker image over the full Python 3.14 image?
+
+The slim image is significantly smaller is size and has fewer potential runtime issues compared to the full Python 3.14 image.
+
+#### What is the primary purpose of a .env file in application development?
+
+A .env file makes working in development easier by storing environment variables locally. It helps avoid polluting the shell with project-specific exports and eliminates the need to source environment variables every time before starting the server. However, it should NOT be used for production secrets.
+
+#### What are the three important things that a .env file is NOT?
+
+NOT where production secrets should live, 2. NOT something that should be in version control, and 3. NOT documentation file. It should always be included in .gitignore
+
+#### What is the rule of thumb for determining whether something counts as a secret?
+
+If a leak would force you to rotate credentials, then it's a secret. Examples include JWT secrets and database URLs that contain passwords.

@@ -2,17 +2,29 @@ from datetime import UTC, date, datetime, timedelta
 
 from sqlmodel import Session
 
+from release_tracker import crud
 from release_tracker.database import get_engine
 from release_tracker.models import Project, Task, TaskPriority, TaskStatus
+
+SEED_USER_EMAIL = "demo@release-tracker.local"
+SEED_USER_PASSWORD = "demo-password"
 
 
 def seed() -> None:
     today = datetime.now(UTC).date()
 
     with Session(get_engine()) as session:
+        crud.create_user(
+            session,
+            email=SEED_USER_EMAIL,
+            password=SEED_USER_PASSWORD,
+        )
+
         frontend = Project(name="Frontend Redesign", slug="frontend-redesign")
         api = Project(name="API v2", slug="api-v2")
-        db_migration = Project(name="Database Migration", slug="database-migration")
+        db_migration = Project(
+            name="Database Migration", slug="database-migration"
+        )
 
         session.add_all([frontend, api, db_migration])
         session.commit()
@@ -52,7 +64,12 @@ def seed() -> None:
         session.add_all(tasks)
         session.commit()
 
-        print(f"Loaded sample data for 3 projects and {len(tasks)} tasks.")
+        print(
+            f"Loaded sample data for 1 user, 3 projects, "
+            f"and {len(tasks)} tasks."
+        )
+        print(f"  Login email:    {SEED_USER_EMAIL}")
+        print(f"  Login password: {SEED_USER_PASSWORD}")
 
 
 if __name__ == "__main__":

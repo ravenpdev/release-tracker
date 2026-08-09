@@ -13,7 +13,9 @@ class Settings(BaseSettings):
     debug: bool = False
     jwt_secret_key: SecretStr = Field(min_length=32)
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8"
+    )
 
 
 def configure_logging(*, debug: bool) -> None:
@@ -23,4 +25,4 @@ def configure_logging(*, debug: bool) -> None:
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()  # pyright: ignore[reportCallIssue]
+    return Settings()  # type: ignore[call-arg]

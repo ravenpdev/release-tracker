@@ -18,14 +18,41 @@ dependencies = [
     "sqlmodel>=0.0.39",
 ]
 
-[tool.fastapi]
-entrypoint = "release_tracker.main:app"
-
 [build-system]
 requires = ["uv_build>=0.11.32,<0.12.0"]
 build-backend = "uv_build"
 
+[tool.fastapi]
+entrypoint = "release_tracker.main:app"
+
+[tool.pytest.ini_options]
+addopts = "-q --import-mode=importlib"
+testpaths = ["tests"]
+norecursedirs = ["_exercise"]
+
+[tool.mypy]
+python_version = "3.14"
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+exclude = [
+    "^tests/",
+    "^alembic/versions/",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["release_tracker"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
 [dependency-groups]
 dev = [
+    "coverage>=7.15.4",
+    "mypy>=2.3.0",
     "pytest>=9.1.1",
+    "ruff>=0.16.2",
 ]

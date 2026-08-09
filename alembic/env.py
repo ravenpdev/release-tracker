@@ -12,7 +12,10 @@ from release_tracker.config import get_settings
 config = context.config
 
 # Inject the database URL from our settings
-config.set_main_option("sqlalchemy.url", get_settings().database_url)
+config.set_main_option(
+    "sqlalchemy.url",
+    get_settings().database_url,
+)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -42,7 +45,9 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection, target_metadata=target_metadata
+        )
 
         with context.begin_transaction():
             context.run_migrations()

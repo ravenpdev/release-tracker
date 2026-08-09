@@ -95,21 +95,26 @@ def test_register_creates_user(client: TestClient) -> None:
     )
 
     assert response.status_code == 201
-    # TODO: Register a new user via POST /auth/register with a JSON body
-    # containing "email" and "password".
-    #
-    # Assert:
-    #   - status code is 201
-    #   - response body contains the email you sent
-    #   - response body has is_active == True
-    #   - hashed_password is NOT in the response
+    data = response.json()
+    assert data["email"] == "user@gmail.com"
+    assert data["is_active"] is True
+    assert "id" in data
+    assert "hashed_password" not in data
 
 
 def test_register_then_login(client: TestClient) -> None:
-    # TODO: Register a new user, then log in with the same credentials
-    # via POST /auth/token (form data, not JSON).
-    #
-    # Assert:
-    #   - the login response has status 200
-    #   - the response contains an access_token
-    pass
+    client.post(
+        "/auth/register",
+        json={"email": "user@gmail.com", "password": "passw0rd"},
+    )
+
+    response = client.post(
+        "/auth/token",
+        data={
+            "username": "user@gmail.com",
+            "password": "passw0rd",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "access_token" in response.json()
